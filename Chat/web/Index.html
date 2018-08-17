@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MiChat</title>
+    <script src="../Scripts/jquery-1.6.4.min.js"></script>
+    <script src="../Scripts/jquery.signalR-2.3.0.js"></script>
+    <script src="../signalr/hubs"></script>
+    <script type="text/javascript">
+        $(function () {
+            var chat = $.connection.chatHub;
+            var username;
+
+            do {
+                username = prompt("Insertar username");
+            } while (username === "" || username === null);
+
+            chat.client.updateUsers = function (userCount, userList) {
+                $("#onlineUserCount").text("Usuarios Conectados: " + userCount);
+                $("#userList").empty();
+                userList.forEach(function (user) {
+                    $("#userList").append("<li>" + user + "</li>")
+                })
+            }
+
+            chat.client.broadcastMessage = function (username, message) {
+                $("#messageList").append("<li>" + username + ": " + message + "</li>");
+            }
+
+            $.connection.hub.start().done(function () {
+                chat.server.connect(username)
+            })
+
+            $("#form").submit(function (e) {
+                var msg = $("#message").val();
+                chat.server.send(msg);
+                $("#message").val("");
+
+                e.preventDefault();
+            })
+
+        })
+
+    </script>
+</head>
+<body>
+    Usuarios Conectados: <span id="onlineUserCount"></span><br />
+    Usuarios: <ul id="userList"></ul>
+    Mensajes: <ul id="messageList"></ul>
+
+    <form id="form">
+        <input type="text" id="message" name="message" value="" />
+        <button type="submit">Enviar</button>
+    </form>
+</body>
+</html>
